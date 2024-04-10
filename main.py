@@ -5,7 +5,7 @@ from PyQt6.QtWidgets import (
     QHBoxLayout,
     QMainWindow,
     QPushButton,
-    QWidget, QFileDialog,
+    QWidget, QFileDialog, QMessageBox,
 )
 
 
@@ -15,9 +15,11 @@ class MainWindow(QMainWindow):
 
         self.setWindowTitle("Safety first")
         sign_file_button = QPushButton("Sign file")
-        sign_file_button.clicked.connect(self.sign_file)
         verify_button = QPushButton("Verify signature")
         cryptic_button = QPushButton("Encryption/decryption ")
+        sign_file_button.clicked.connect(self.sign_file)
+        verify_button.clicked.connect(self.verify)
+        cryptic_button.clicked.connect(self.cryption)
 
         hbox = QHBoxLayout()
         hbox.addWidget(sign_file_button)
@@ -33,7 +35,25 @@ class MainWindow(QMainWindow):
         file_dialog.setFileMode(QFileDialog.FileMode.ExistingFile)      #max one file
         file_dialog.setNameFilter("RSA files (*.rsa)")
         file_dialog.exec()
+        if file_dialog.exec() == QFileDialog.DialogCode.Rejected:
+            self.show_error("Error when choosing key")
+        print(file_dialog.selectedFiles()[0].title())
 
+    def verify(self):
+
+        pass
+    def cryption(self):
+        pass
+    def show_error(self, text):
+        msg = QMessageBox()
+        msg.setIcon(QMessageBox.Icon.Critical)
+        msg.setText(text)
+        msg.setWindowTitle("Error")
+        msg.adjustSize()
+        msg.exec()
+
+    def insert_pin(self):
+        pass
 
 app = QApplication(sys.argv)
 
