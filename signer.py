@@ -1,5 +1,6 @@
 import hashlib
 import cryptography.hazmat
+from endesive import plain
 from cryptography.exceptions import InvalidSignature
 from cryptography.hazmat.primitives import hashes, serialization
 from cryptography.hazmat.primitives.asymmetric import padding
@@ -16,7 +17,7 @@ def encrypt_key(key, pin):
     return key.private_bytes(
         encoding=serialization.Encoding.PEM,
         format=serialization.PrivateFormat.PKCS8,
-        encryption_algorithm=serialization.BestAvailableEncryption(pin.encode())
+        encryption_algorithm=serialization.BestAvailableEncryption(password=pin.encode())
     )
 
 
@@ -25,7 +26,6 @@ def decrypt_key(key, pin):
         key,
         password=pin.encode()
     )
-
 
 def sign_data(data, private_key):
     return private_key.sign(data.encode(), padding.PSS(
@@ -44,14 +44,15 @@ def verify_signature(data, private_key, signature):
 
 def create_keys(path, file_name, pin):
     private_key = generate_rsa()
-    with open(path + file_name + ".pem", 'w') as f:
-        f.write(private_key.public_bytes())
-    with open(path + file_name + "priv.pem", 'w') as f:
+    with open(path + "/" + file_name + ".pem", 'wb') as f:
+        f.write(private_key.public_key().public_bytes(serialization.Encoding.PEM,
+                                                      format=serialization.PublicFormat.SubjectPublicKeyInfo))
+    with open(path + "/" + file_name + "priv.pem", 'wb') as f:
         f.write(encrypt_key(private_key, pin))
 
 
-def load_private_key_from_file(filename, pin):
-    with open(filename, "rb") as key_file:
+def load_private_key_from_file(url, pin):
+    with open(url, "rb") as key_file:
         private_key = serialization.load_pem_private_key(
             key_file.read(),
             password=pin
