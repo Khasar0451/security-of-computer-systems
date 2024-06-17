@@ -49,15 +49,15 @@ def load_public_key_from_file(url):
     with open(url, "rb") as key_file:
         return serialization.load_pem_public_key(key_file.read())
 
-def encrypt_string(data, public_key):
-    return public_key.encrypt(data.encode(),
+def encrypt_data(data, public_key):
+    return public_key.encrypt(data,
         padding.OAEP(
             mgf=padding.MGF1(algorithm=hashes.SHA256()),
             algorithm=hashes.SHA256(),
             label=None
         ))
 
-def decrypt_string(data : bytes, private_key):
+def decrypt_data(data : bytes, private_key):
     return private_key.decrypt(data, padding.OAEP(
             mgf=padding.MGF1(algorithm=hashes.SHA256()),
             algorithm=hashes.SHA256(),

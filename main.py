@@ -56,7 +56,7 @@ class MainWindow(QMainWindow):
     def get_file_with_key(self):
         key_file_dialog = QFileDialog()
         key_file_dialog.setFileMode(QFileDialog.FileMode.ExistingFile)
-        key_file_dialog.setNameFilter("RSA files (*.rsa)")
+        key_file_dialog.setNameFilter("RSA files (*.pem)")
         if key_file_dialog.exec() == QFileDialog.DialogCode.Rejected:
             self.show_error("Error when choosing key")
             return
@@ -72,32 +72,53 @@ class MainWindow(QMainWindow):
 
     def sign_file(self):
         file = self.get_file()
-        key = self.get_file_with_key()
+        key_file = self.get_file_with_key()
+        pin = self.insert_pin()
+        private_key = load_private_key_from_file(key_file,pin)
 
         print(file.title())
-        print(key.title())
+
 
     def verify(self):
         file = self.get_file()
         xml_file = self.get_file()
-        key = self.get_file_with_key()
+        key_file = self.get_file_with_key()
+        public_key = load_public_key_from_file(key_file)
 
     def encryption(self):
+        key_file = self.get_file_with_key()
+        public_key = load_public_key_from_file(key_file)
         file = self.get_file()
-        try:
-            pin = self.insert_pin()
-        except Exception as e:
-            self.show_error("Invalid PIN")
+        with open(file, "rb") as f:
+            data = f.read()
+            buffer = data
+
+        with open(file, "wb") as f:
+            f.write(encrypt_data(buffer, public_key))
 
     def decryption(self):
-        file = self.get_file()
+        key_file = self.get_file_with_key()
+
         try:
             pin = self.insert_pin()
+            private_key = load_private_key_from_file(key_file, pin)
+            file = self.get_file()
+            with open(file, "rb") as f:
+                data = f.read()
+                buffer = data
+
+            with open(file, "wb") as f:
+                f.write(decrypt_data(buffer, private_key))
         except Exception as e:
             self.show_error("Invalid PIN")
 
     def key_generation(self):
-        directory = self.choose_directory()
+        try:
+            directory = self.choose_directory()
+            pin = self.insert_pin()
+            save_keys(path=directory, file_name="key", private_key=generate_rsa(), pin=pin)
+        except Exception as e:
+            self.show_error("Invalid PIN")
 
     def show_error(self, text):
         msg = QMessageBox()
