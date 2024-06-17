@@ -26,15 +26,15 @@ def decrypt_key(key, pin):
     )
 
 
-def hash_data(data, private_key):
+def sign_data(data, private_key):
     return private_key.sign(data.encode(), padding.PSS(
         mgf=padding.MGF1(hashes.SHA256()), salt_length=padding.PSS.MAX_LENGTH
     ), hashes.SHA256())
 
 
-def verify_hash(data, private_key, signature):
+def verify_signature(data, public_key, signature):
     try:
-        private_key.verify(signature, data, padding.PSS(
+        public_key.verify(signature, data.encode(), padding.PSS(
             mgf=padding.MGF1(hashes.SHA256()), salt_length=padding.PSS.MAX_LENGTH), hashes.SHA256())
     except InvalidSignature:
         return False

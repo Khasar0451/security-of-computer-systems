@@ -4,7 +4,7 @@ from cryptography.hazmat.primitives import serialization, hashes
 from cryptography.hazmat.primitives.asymmetric import padding
 
 from signer import encrypt_key, decrypt_key, generate_rsa, create_keys, load_private_key_from_file, \
-    load_public_key_from_file
+    load_public_key_from_file, sign_data, verify_signature
 
 
 def test_encrypt_decrypt_key():
@@ -59,5 +59,18 @@ def test_save_load_keys():
 
     os.remove(private_key_path)
     os.remove(public_key_path)
+
+
+def test_sign_verify():
+    key = generate_rsa()
+    lorem_string = ("Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed in commodo diam. Mauris placerat sem "
+                    "id")
+    " nibh sagittis sodales. Nulla varius sollicitudin ornare. Aenean sed efficitur ex. Proin fermentum"
+    " lorem sem, vitae mollis lorem auctor at. Nullam mollis diam vulputate, volutpat leo vitae,"
+    " consequat nibh. Sed in enim enim. "
+
+    signature = sign_data(lorem_string, key)
+    assert verify_signature(lorem_string, key.public_key(), signature)
+
 
 
