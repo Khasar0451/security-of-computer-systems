@@ -11,21 +11,6 @@ def generate_rsa():
     )
 
 
-def encrypt_key(key, pin):
-    return key.private_bytes(
-        encoding=serialization.Encoding.PEM,
-        format=serialization.PrivateFormat.PKCS8,
-        encryption_algorithm=serialization.BestAvailableEncryption(password=pin.encode())
-    )
-
-
-def decrypt_key(key, pin):
-    return serialization.load_pem_private_key(
-        key,
-        password=pin.encode()
-    )
-
-
 def sign_data(data, private_key):
     return private_key.sign(data.encode(), padding.PSS(
         mgf=padding.MGF1(hashes.SHA256()), salt_length=padding.PSS.MAX_LENGTH
