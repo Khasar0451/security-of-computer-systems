@@ -1,5 +1,6 @@
 import sys
 import PyQt6.QtCore as Qt
+from signer import *
 
 from PyQt6.QtWidgets import (
     QApplication,
@@ -17,11 +18,13 @@ class MainWindow(QMainWindow):
         self.setWindowTitle("Safety first")
         sign_file_button = QPushButton("Sign file")
         verify_button = QPushButton("Verify signature")
-        cryptic_button = QPushButton("Encryption/decryption")
+        encryption_button = QPushButton("Encryption")
+        decryption_button = QPushButton("Decryption")
         key_button = QPushButton("Generate key")
         sign_file_button.clicked.connect(self.sign_file)
         verify_button.clicked.connect(self.verify)
-        cryptic_button.clicked.connect(self.cryption)
+        encryption_button.clicked.connect(self.encryption)
+        decryption_button.clicked.connect(self.decryption)
         key_button.clicked.connect(self.key_generation)
 
         status_label = QLabel("Kowalki analiza")
@@ -30,7 +33,8 @@ class MainWindow(QMainWindow):
         vbox = QVBoxLayout()
         hbox.addWidget(sign_file_button)
         hbox.addWidget(verify_button)
-        hbox.addWidget(cryptic_button)
+        hbox.addWidget(encryption_button)
+        hbox.addWidget(decryption_button)
         hbox.addWidget(key_button)
 
         vbox.addLayout(hbox)
@@ -78,7 +82,14 @@ class MainWindow(QMainWindow):
         xml_file = self.get_file()
         key = self.get_file_with_key()
 
-    def cryption(self):
+    def encryption(self):
+        file = self.get_file()
+        try:
+            pin = self.insert_pin()
+        except Exception as e:
+            self.show_error("Invalid PIN")
+
+    def decryption(self):
         file = self.get_file()
         try:
             pin = self.insert_pin()
