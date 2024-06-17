@@ -1,9 +1,11 @@
 import hashlib
 import cryptography.hazmat
+import xmlsig
 from endesive import plain
 from cryptography.exceptions import InvalidSignature
 from cryptography.hazmat.primitives import hashes, serialization
 from cryptography.hazmat.primitives.asymmetric import padding
+import xades
 
 
 def generate_rsa():
@@ -55,6 +57,6 @@ def load_private_key_from_file(url, pin):
     with open(url, "rb") as key_file:
         private_key = serialization.load_pem_private_key(
             key_file.read(),
-            password=pin
+            password=(pin)
         )
     return private_key
