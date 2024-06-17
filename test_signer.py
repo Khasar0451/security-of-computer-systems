@@ -1,10 +1,7 @@
 import pytest, os
 
-from cryptography.hazmat.primitives import serialization, hashes
-from cryptography.hazmat.primitives.asymmetric import padding
 
-from signer import generate_rsa, create_keys, load_private_key_from_file, \
-    load_public_key_from_file, sign_data, verify_signature
+from signer import *
 
 
 def test_save_load_keys():
@@ -13,7 +10,8 @@ def test_save_load_keys():
     private_key_path = path + "/" + key_file_name + "priv.pem"
     public_key_path = path + "/" + key_file_name + ".pem"
     pin = "1"
-    create_keys(path=path, file_name=key_file_name, pin=pin)
+    private_key = generate_rsa()
+    save_keys(path=path, file_name=key_file_name,private_key=private_key , pin=pin)
 
     lorem_string = ("Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed in commodo diam. Mauris placerat sem "
                     "id")
@@ -53,4 +51,16 @@ def test_sign_verify():
     assert verify_signature(lorem_string, key.public_key(), signature)
 
 
+def test_encrypt_decrypt():
+    key = generate_rsa()
+    lorem_string = ("Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed in commodo diam. Mauris placerat sem "
+                    "id")
+    " nibh sagittis sodales. Nulla varius sollicitudin ornare. Aenean sed efficitur ex. Proin fermentum"
+    " lorem sem, vitae mollis lorem auctor at. Nullam mollis diam vulputate, volutpat leo vitae,"
+    " consequat nibh. Sed in enim enim. "
+    encrypted = encrypt_string(lorem_string, key.public_key())
+
+    decrypted = decrypt_string(encrypted, key)
+
+    assert decrypted == lorem_string.encode()
 
