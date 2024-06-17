@@ -11,21 +11,6 @@ def generate_rsa():
     )
 
 
-def encrypt_key(key, pin):
-    return key.private_bytes(
-        encoding=serialization.Encoding.PEM,
-        format=serialization.PrivateFormat.PKCS8,
-        encryption_algorithm=serialization.BestAvailableEncryption(password=pin.encode())
-    )
-
-
-def decrypt_key(key, pin):
-    return serialization.load_pem_private_key(
-        key,
-        password=pin.encode()
-    )
-
-
 def sign_data(data, private_key):
     return private_key.sign(data.encode(), padding.PSS(
         mgf=padding.MGF1(hashes.SHA256()), salt_length=padding.PSS.MAX_LENGTH
@@ -41,8 +26,7 @@ def verify_signature(data, public_key, signature):
     return True
 
 
-def create_keys(path, file_name, pin):
-    private_key = generate_rsa()
+def save_keys(path, file_name, private_key, pin):
     with open(path + "/" + file_name + ".pem", 'wb') as f:
         f.write(private_key.public_key().public_bytes(serialization.Encoding.PEM,
                                                       format=serialization.PublicFormat.SubjectPublicKeyInfo))
@@ -51,7 +35,6 @@ def create_keys(path, file_name, pin):
                                           format=serialization.PrivateFormat.TraditionalOpenSSL,
                                           encryption_algorithm=serialization.
                                           BestAvailableEncryption(password=pin.encode())))
-
 
 def load_private_key_from_file(url, pin):
     with open(url, "rb") as key_file:
@@ -65,3 +48,18 @@ def load_private_key_from_file(url, pin):
 def load_public_key_from_file(url):
     with open(url, "rb") as key_file:
         return serialization.load_pem_public_key(key_file.read())
+
+def encrypt_string(data, public_key):
+    return public_key.encrypt(data.encode(),
+        padding.OAEP(
+            mgf=padding.MGF1(algorithm=hashes.SHA256()),
+            algorithm=hashes.SHA256(),
+            label=None
+        ))
+
+def decrypt_string(data : bytes, private_key):
+    return private_key.decrypt(data, padding.OAEP(
+            mgf=padding.MGF1(algorithm=hashes.SHA256()),
+            algorithm=hashes.SHA256(),
+            label=None
+        ))
