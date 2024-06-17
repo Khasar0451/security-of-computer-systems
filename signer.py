@@ -33,7 +33,6 @@ def create_xml(path_with_file_name):
     tree = ET.ElementTree(root)
     tree.write('a.xml')
 
-create_xml("R:\.Programowanie\info.txt")
 
 def generate_rsa():
     return cryptography.hazmat.primitives.asymmetric.rsa.generate_private_key(
