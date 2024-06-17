@@ -84,6 +84,9 @@ class MainWindow(QMainWindow):
         xml_file = self.get_file()
         key_file = self.get_file_with_key()
         public_key = load_public_key_from_file(key_file)
+        verify_xml(xml_file, public_key, file)
+
+        
 
     def encryption(self):
         key_file = self.get_file_with_key()

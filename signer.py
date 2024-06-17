@@ -8,18 +8,60 @@ import xml.etree.ElementTree as ET
 import os
 import time
 
+
+
+def load_private_key_from_file(url, pin):
+    with open(url, "rb") as key_file:
+        private_key = serialization.load_pem_private_key(
+            key_file.read(),
+            password=pin.encode()
+        )
+    return private_key
+
+
+def load_public_key_from_file(url):
+    with open(url, "rb") as key_file:
+        return serialization.load_pem_public_key(key_file.read())
+
+
+def encrypt_string(data, public_key):
+    return public_key.encrypt(data.encode(),
+                              padding.OAEP(
+                                  mgf=padding.MGF1(algorithm=hashes.SHA256()),
+                                  algorithm=hashes.SHA256(),
+                                  label=None
+                              ))
+
+
+def decrypt_string(data: bytes, private_key):
+    return private_key.decrypt(data, padding.OAEP(
+        mgf=padding.MGF1(algorithm=hashes.SHA256()),
+        algorithm=hashes.SHA256(),
+        label=None
+    ))
+
+
+def verify_signature(data, public_key, signature):  # data - signed file, signature - hash from xml
+    try:
+        public_key.verify(signature, data.encode(), padding.PSS(
+            mgf=padding.MGF1(hashes.SHA256()), salt_length=padding.PSS.MAX_LENGTH), hashes.SHA256())
+    except InvalidSignature:
+        return False
+    return True
+
+
 def create_xml(path_with_file_name):
     root = ET.Element('root')
     size = ET.SubElement(root, "size")
     size.text = str(os.stat(path_with_file_name).st_size)
 
-    extension = ET.SubElement(root,"extension")
+    extension = ET.SubElement(root, "extension")
     _, extension.text = os.path.splitext(path_with_file_name)
 
-    date_of_modification = ET.SubElement(root,"date_of_modification")
-    date_of_modification.text = time.ctime(os.path.getmtime(path_with_file_name)) #m in getmtime as modified
+    date_of_modification = ET.SubElement(root, "date_of_modification")
+    date_of_modification.text = time.ctime(os.path.getmtime(path_with_file_name))  # m in getmtime as modified
 
-    user_name = ET.SubElement(root,"user_name")
+    user_name = ET.SubElement(root, "user_name")
     user_name.text = "User A"
 
     encrypted_hash = ET.SubElement(root, "encrypted_hash")
@@ -30,6 +72,14 @@ def create_xml(path_with_file_name):
 
     tree = ET.ElementTree(root)
     tree.write('a.xml')
+
+
+def verify_xml(path_xml, path_key, path_file):
+    tree = ET.parse(path_xml)
+    root = tree.getroot()
+    hash = decrypt_string(root.find('encrypted_hash'))
+    with open(path_file, "rb") as file:
+        return verify_signature(file, load_public_key_from_file(path_key), hash.encode())
 
 
 def generate_rsa():
@@ -43,15 +93,6 @@ def sign_data(data, private_key):
     return private_key.sign(data.encode(), padding.PSS(
         mgf=padding.MGF1(hashes.SHA256()), salt_length=padding.PSS.MAX_LENGTH
     ), hashes.SHA256())
-
-
-def verify_signature(data, public_key, signature):
-    try:
-        public_key.verify(signature, data.encode(), padding.PSS(
-            mgf=padding.MGF1(hashes.SHA256()), salt_length=padding.PSS.MAX_LENGTH), hashes.SHA256())
-    except InvalidSignature:
-        return False
-    return True
 
 
 def save_keys(path, file_name, private_key, pin):
