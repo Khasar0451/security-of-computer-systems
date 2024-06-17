@@ -1,5 +1,6 @@
 import sys
 import PyQt6.QtCore as Qt
+from signer import *
 
 from PyQt6.QtWidgets import (
     QApplication,
@@ -17,11 +18,13 @@ class MainWindow(QMainWindow):
         self.setWindowTitle("Safety first")
         sign_file_button = QPushButton("Sign file")
         verify_button = QPushButton("Verify signature")
-        cryptic_button = QPushButton("Encryption/decryption")
+        encryption_button = QPushButton("Encryption")
+        decryption_button = QPushButton("Decryption")
         key_button = QPushButton("Generate key")
         sign_file_button.clicked.connect(self.sign_file)
         verify_button.clicked.connect(self.verify)
-        cryptic_button.clicked.connect(self.cryption)
+        encryption_button.clicked.connect(self.encryption)
+        decryption_button.clicked.connect(self.decryption)
         key_button.clicked.connect(self.key_generation)
 
         status_label = QLabel("Kowalki analiza")
@@ -30,7 +33,8 @@ class MainWindow(QMainWindow):
         vbox = QVBoxLayout()
         hbox.addWidget(sign_file_button)
         hbox.addWidget(verify_button)
-        hbox.addWidget(cryptic_button)
+        hbox.addWidget(encryption_button)
+        hbox.addWidget(decryption_button)
         hbox.addWidget(key_button)
 
         vbox.addLayout(hbox)
@@ -52,7 +56,7 @@ class MainWindow(QMainWindow):
     def get_file_with_key(self):
         key_file_dialog = QFileDialog()
         key_file_dialog.setFileMode(QFileDialog.FileMode.ExistingFile)
-        key_file_dialog.setNameFilter("RSA files (*.rsa)")
+        key_file_dialog.setNameFilter("RSA files (*.pem)")
         if key_file_dialog.exec() == QFileDialog.DialogCode.Rejected:
             self.show_error("Error when choosing key")
             return
@@ -68,25 +72,53 @@ class MainWindow(QMainWindow):
 
     def sign_file(self):
         file = self.get_file()
-        key = self.get_file_with_key()
+        key_file = self.get_file_with_key()
+        pin = self.insert_pin()
+        private_key = load_private_key_from_file(key_file,pin)
 
         print(file.title())
-        print(key.title())
+
 
     def verify(self):
         file = self.get_file()
         xml_file = self.get_file()
-        key = self.get_file_with_key()
+        key_file = self.get_file_with_key()
+        public_key = load_public_key_from_file(key_file)
 
-    def cryption(self):
+    def encryption(self):
+        key_file = self.get_file_with_key()
+        public_key = load_public_key_from_file(key_file)
         file = self.get_file()
+        with open(file, "rb") as f:
+            data = f.read()
+            buffer = data
+
+        with open(file, "wb") as f:
+            f.write(encrypt_data(buffer, public_key))
+
+    def decryption(self):
+        key_file = self.get_file_with_key()
+
         try:
             pin = self.insert_pin()
+            private_key = load_private_key_from_file(key_file, pin)
+            file = self.get_file()
+            with open(file, "rb") as f:
+                data = f.read()
+                buffer = data
+
+            with open(file, "wb") as f:
+                f.write(decrypt_data(buffer, private_key))
         except Exception as e:
             self.show_error("Invalid PIN")
 
     def key_generation(self):
-        directory = self.choose_directory()
+        try:
+            directory = self.choose_directory()
+            pin = self.insert_pin()
+            save_keys(path=directory, file_name="key", private_key=generate_rsa(), pin=pin)
+        except Exception as e:
+            self.show_error("Invalid PIN")
 
     def show_error(self, text):
         msg = QMessageBox()
