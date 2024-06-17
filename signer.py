@@ -41,7 +41,8 @@ def decrypt_data(data : bytes, private_key):
 
 def verify_signature(data, public_key, signature):  # data - signed file, signature - hash from xml
     try:
-        public_key.verify(signature.encode(), data, padding.PSS(
+
+        public_key.verify(signature[2:].encode(), data, padding.PSS(
             mgf=padding.MGF1(hashes.SHA256()), salt_length=padding.PSS.MAX_LENGTH), hashes.SHA256())
     except InvalidSignature:
         return False
@@ -76,7 +77,7 @@ def create_xml(path_with_file_name, private_key):
 def verify_xml(path_xml, path_key, path_file):
     tree = ET.parse(path_xml)
     root = tree.getroot()
-    hash = str(root.find('encrypted_hash'))
+    hash = str(root.find('encrypted_hash').text)
     with open(path_file, "rb") as file:
         public_key = load_public_key_from_file(path_key)
         return verify_signature(file.read(), public_key, hash)
