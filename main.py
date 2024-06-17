@@ -1,5 +1,7 @@
 import sys
 import PyQt6.QtCore as Qt
+
+import signer
 from signer import *
 
 from PyQt6.QtWidgets import (
@@ -74,19 +76,19 @@ class MainWindow(QMainWindow):
         file = self.get_file()
         key_file = self.get_file_with_key()
         pin = self.insert_pin()
-        private_key = load_private_key_from_file(key_file,pin)
-
-        print(file.title())
-
+        private_key = load_private_key_from_file(key_file, pin)
+        signer.create_xml(file, private_key)
 
     def verify(self):
         file = self.get_file()
         xml_file = self.get_file()
         key_file = self.get_file_with_key()
-        public_key = load_public_key_from_file(key_file)
-        verify_xml(xml_file, public_key, file)
-
-        
+        # public_key = load_public_key_from_file(key_file)
+        if verify_xml(xml_file, key_file, file):
+            print("jej")
+        else:
+            print("nie jej")
+            # TO DO status zmienic
 
     def encryption(self):
         key_file = self.get_file_with_key()

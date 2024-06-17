@@ -47,7 +47,7 @@ def test_sign_verify():
     " lorem sem, vitae mollis lorem auctor at. Nullam mollis diam vulputate, volutpat leo vitae,"
     " consequat nibh. Sed in enim enim. "
 
-    signature = sign_data(lorem_string, key)
+    signature = sign_data(lorem_string.encode(), key)
     assert verify_signature(lorem_string, key.public_key(), signature)
 
 
@@ -58,7 +58,7 @@ def test_encrypt_decrypt():
     " nibh sagittis sodales. Nulla varius sollicitudin ornare. Aenean sed efficitur ex. Proin fermentum"
     " lorem sem, vitae mollis lorem auctor at. Nullam mollis diam vulputate, volutpat leo vitae,"
     " consequat nibh. Sed in enim enim. "
-    encrypted = encrypt_string(lorem_string, key.public_key())
+    encrypted = encrypt_string(lorem_string.encode(), key.public_key())
 
     decrypted = decrypt_string(encrypted, key)
 
