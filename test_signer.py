@@ -1,8 +1,10 @@
 import pytest, os
 
-from cryptography.hazmat.primitives import serialization
+from cryptography.hazmat.primitives import serialization, hashes
+from cryptography.hazmat.primitives.asymmetric import padding
 
-from signer import encrypt_key, decrypt_key, generate_rsa, create_keys, load_private_key_from_file
+from signer import encrypt_key, decrypt_key, generate_rsa, create_keys, load_private_key_from_file, \
+    load_public_key_from_file, sign_data, verify_signature
 
 
 def test_encrypt_decrypt_key():
@@ -27,22 +29,48 @@ def test_encrypt_decrypt_key():
 
 def test_save_load_keys():
     path = "/tmp"
-    file_url = "/tmp/file.cpp"
     key_file_name = "key"
-    pin = "123"
-    create_keys(path="/tmp", file_name=key_file_name, pin=pin)
+    private_key_path = path + "/" + key_file_name + "priv.pem"
+    public_key_path = path + "/" + key_file_name + ".pem"
+    pin = "1"
+    create_keys(path=path, file_name=key_file_name, pin=pin)
 
-    with open(file_url, 'w') as f:
-        f.write(" Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed in commodo diam. Mauris placerat sem id"
-                " nibh sagittis sodales. Nulla varius sollicitudin ornare. Aenean sed efficitur ex. Proin fermentum"
-                " lorem sem, vitae mollis lorem auctor at. Nullam mollis diam vulputate, volutpat leo vitae,"
-                " consequat nibh. Sed in enim enim. ")
+    lorem_string = ("Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed in commodo diam. Mauris placerat sem "
+                    "id")
+    " nibh sagittis sodales. Nulla varius sollicitudin ornare. Aenean sed efficitur ex. Proin fermentum"
+    " lorem sem, vitae mollis lorem auctor at. Nullam mollis diam vulputate, volutpat leo vitae,"
+    " consequat nibh. Sed in enim enim. "
 
-    private_key = load_private_key_from_file(url=file_url, pin=pin)
+    public_key = load_public_key_from_file(public_key_path)
+    private_key = load_private_key_from_file(url=private_key_path, pin=pin)
 
-    assert os.path.exists(key_file_name + "/" + key_file_name + ".pem")
-    assert os.path.exists(key_file_name + "/" + key_file_name + "priv.pem")
+    encrypted_string = public_key.encrypt(lorem_string.encode(),
+        padding.OAEP(
+            mgf=padding.MGF1(algorithm=hashes.SHA256()),
+            algorithm=hashes.SHA256(),
+            label=None
+        ))
 
-    os.remove(file_url)
-    os.remove(key_file_name + "/" + key_file_name + ".pem")
-    os.remove(key_file_name + "/" + key_file_name + "priv.pem")
+    assert lorem_string.encode() == private_key.decrypt(encrypted_string, padding.OAEP(
+            mgf=padding.MGF1(algorithm=hashes.SHA256()),
+            algorithm=hashes.SHA256(),
+            label=None
+        ))
+
+    os.remove(private_key_path)
+    os.remove(public_key_path)
+
+
+def test_sign_verify():
+    key = generate_rsa()
+    lorem_string = ("Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed in commodo diam. Mauris placerat sem "
+                    "id")
+    " nibh sagittis sodales. Nulla varius sollicitudin ornare. Aenean sed efficitur ex. Proin fermentum"
+    " lorem sem, vitae mollis lorem auctor at. Nullam mollis diam vulputate, volutpat leo vitae,"
+    " consequat nibh. Sed in enim enim. "
+
+    signature = sign_data(lorem_string, key)
+    assert verify_signature(lorem_string, key.public_key(), signature)
+
+
+
