@@ -33,18 +33,35 @@ class MainWindow(QMainWindow):
         centralWidget.setLayout(hbox)
         self.setCentralWidget(centralWidget)
 
-    def sign_file(self):
+    def get_file(self):
         file_dialog = QFileDialog()
         file_dialog.setFileMode(QFileDialog.FileMode.ExistingFile)  # max one file
-        file_dialog.setNameFilter("PDF files (*.pdf);;RSA files (*.rsa);;XML files (*.xml)")
-
+        file_dialog.setNameFilter("Files (*.pdf *.cpp *.xml)")
         if file_dialog.exec() == QFileDialog.DialogCode.Rejected:
-            self.show_error("Error when choosing key/files")
+            self.show_error("Error when choosing file")
             return
-        print(file_dialog.selectedFiles()[0].title())
+        return file_dialog.selectedFiles()[0]
+
+    def get_file_with_key(self):
+        key_file_dialog = QFileDialog()
+        key_file_dialog.setFileMode(QFileDialog.FileMode.ExistingFile)
+        key_file_dialog.setNameFilter("RSA files (*.rsa)")
+        if key_file_dialog.exec() == QFileDialog.DialogCode.Rejected:
+            self.show_error("Error when choosing key")
+            return
+        return key_file_dialog.selectedFiles()[0]
+
+    def sign_file(self):
+        file = self.get_file()
+        key = self.get_file_with_key()
+
+        print(file.title())
+        print(key.title())
 
     def verify(self):
-        pass
+        file = self.get_file()
+        key = self.get_file_with_key()
+
 
     def cryption(self):
         try:
