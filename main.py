@@ -1,11 +1,12 @@
 import sys
+import PyQt6.QtCore as Qt
 
 from PyQt6.QtWidgets import (
     QApplication,
-    QHBoxLayout,
+    QHBoxLayout, QVBoxLayout,
     QMainWindow,
     QPushButton,
-    QWidget, QFileDialog, QMessageBox, QInputDialog,
+    QWidget, QFileDialog, QMessageBox, QInputDialog, QLabel
 )
 
 
@@ -23,14 +24,20 @@ class MainWindow(QMainWindow):
         cryptic_button.clicked.connect(self.cryption)
         key_button.clicked.connect(self.key_generation)
 
+        status_label = QLabel("Kowalki analiza")
+
         hbox = QHBoxLayout()
+        vbox = QVBoxLayout()
         hbox.addWidget(sign_file_button)
         hbox.addWidget(verify_button)
         hbox.addWidget(cryptic_button)
         hbox.addWidget(key_button)
 
+        vbox.addLayout(hbox)
+        vbox.addWidget(status_label)
+
         centralWidget = QWidget()
-        centralWidget.setLayout(hbox)
+        centralWidget.setLayout(vbox)
         self.setCentralWidget(centralWidget)
 
     def get_file(self):
@@ -51,6 +58,14 @@ class MainWindow(QMainWindow):
             return
         return key_file_dialog.selectedFiles()[0]
 
+    def choose_directory(self):
+        directory_dialog = QFileDialog()
+        directory_dialog.setFileMode(QFileDialog.FileMode.Directory)
+        if directory_dialog.exec():
+            return directory_dialog.selectedFiles()[0]
+        else:
+            self.show_error("Error when choosing directory")
+
     def sign_file(self):
         file = self.get_file()
         key = self.get_file_with_key()
@@ -60,23 +75,18 @@ class MainWindow(QMainWindow):
 
     def verify(self):
         file = self.get_file()
+        xml_file = self.get_file()
         key = self.get_file_with_key()
 
-
     def cryption(self):
+        file = self.get_file()
         try:
             pin = self.insert_pin()
         except Exception as e:
             self.show_error("Invalid PIN")
 
     def key_generation(self):
-        directory_dialog = QFileDialog()
-        directory_dialog.setFileMode(QFileDialog.FileMode.Directory)
-        if directory_dialog.exec():
-            directory = directory_dialog.selectedFiles()[0]
-            print(directory)
-        else:
-            self.show_error("Machine spirit is not satisfied with your lack of cooperation")
+        directory = self.choose_directory()
 
     def show_error(self, text):
         msg = QMessageBox()
