@@ -78,7 +78,6 @@ class MainWindow(QMainWindow):
         xml_file = self.get_file()
         key = self.get_file_with_key()
 
-
     def cryption(self):
         file = self.get_file()
         try:
