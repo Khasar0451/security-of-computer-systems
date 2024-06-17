@@ -8,18 +8,18 @@ from cryptography.hazmat.primitives import hashes, serialization
 from cryptography.hazmat.primitives.asymmetric import padding
 import xml.etree.ElementTree as ET
 import os
-
+import time
 
 def create_xml(path_with_file_name):
     root = ET.Element('root')
     size = ET.SubElement(root, "size")
-    size.text = os.stat(path_with_file_name).st_size
+    size.text = str(os.stat(path_with_file_name).st_size)
 
     extension = ET.SubElement(root,"extension")
     _, extension.text = os.path.splitext(path_with_file_name)
 
     date_of_modification = ET.SubElement(root,"date_of_modification")
-    date_of_modification.text = os.path.getmtime(path_with_file_name) #m in getmtime as modified
+    date_of_modification.text = time.ctime(os.path.getmtime(path_with_file_name)) #m in getmtime as modified
 
     user_name = ET.SubElement(root,"user_name")
     user_name.text = "User A"
@@ -28,7 +28,7 @@ def create_xml(path_with_file_name):
     encrypted_hash.text = "TutajHash"
 
     signature_timestamp = ET.SubElement(root, "signature_timestamp")
-    signature_timestamp.text = datetime.datetime.now()
+    signature_timestamp.text = datetime.datetime.now().strftime("%m/%d/%Y, %H:%M:%S")
 
     tree = ET.ElementTree(root)
     tree.write('a.xml')
