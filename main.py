@@ -1,5 +1,5 @@
 import sys
-import PyQt6.QtCore as Qt
+from PyQt6 import QtCore
 
 import signer
 from signer import *
@@ -29,6 +29,7 @@ class MainWindow(QMainWindow):
         key_button.clicked.connect(self.key_generation)
 
         self.status_label = QLabel("Witaj")
+        self.status_label.setAlignment(QtCore.Qt.AlignmentFlag.AlignCenter)
 
         hbox = QHBoxLayout()
         vbox = QVBoxLayout()
