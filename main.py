@@ -47,6 +47,7 @@ class MainWindow(QMainWindow):
 
     def get_file(self):
         file_dialog = QFileDialog()
+        file_dialog.setWindowTitle("Choose a file")
         file_dialog.setFileMode(QFileDialog.FileMode.ExistingFile)  # max one file
         file_dialog.setNameFilter("Files (*.pdf *.cpp)")
         if file_dialog.exec() == QFileDialog.DialogCode.Rejected:
@@ -56,6 +57,7 @@ class MainWindow(QMainWindow):
 
     def get_xml_file(self):
         file_dialog = QFileDialog()
+        file_dialog.setWindowTitle("Choose an XML file")
         file_dialog.setFileMode(QFileDialog.FileMode.ExistingFile)  # max one file
         file_dialog.setNameFilter("File (*.xml)")
         if file_dialog.exec() == QFileDialog.DialogCode.Rejected:
@@ -63,9 +65,9 @@ class MainWindow(QMainWindow):
             return
         return file_dialog.selectedFiles()[0]
 
-
     def get_file_with_key(self):
         key_file_dialog = QFileDialog()
+        key_file_dialog.setWindowTitle("Choose a file with key")
         key_file_dialog.setFileMode(QFileDialog.FileMode.ExistingFile)
         key_file_dialog.setNameFilter("RSA files (*.pem)")
         if key_file_dialog.exec() == QFileDialog.DialogCode.Rejected:
@@ -75,6 +77,7 @@ class MainWindow(QMainWindow):
 
     def choose_directory(self):
         directory_dialog = QFileDialog()
+        directory_dialog.setWindowTitle("Choose a directory to save key")
         directory_dialog.setFileMode(QFileDialog.FileMode.Directory)
         if directory_dialog.exec():
             return directory_dialog.selectedFiles()[0]
@@ -98,7 +101,6 @@ class MainWindow(QMainWindow):
             self.status_label.setText("Signatures are identical")
         else:
             self.status_label.setText("Signatures are different")
-
 
     def encryption(self):
         key_file = self.get_file_with_key()
@@ -145,6 +147,7 @@ class MainWindow(QMainWindow):
         msg.setWindowTitle("Error")
         msg.adjustSize()
         self.status_label.setText("Error~occured!")
+        self.status_label.set
         msg.exec()
 
     def insert_pin(self):
