@@ -47,6 +47,10 @@ class MainWindow(QMainWindow):
         centralWidget.setLayout(vbox)
         self.setCentralWidget(centralWidget)
 
+    def display_success(self, text):
+        self.status_label.setText(text)
+        self.status_label.setStyleSheet("background-color: lightgreen")
+
     def get_file(self):
         file_dialog = QFileDialog()
         file_dialog.setWindowTitle("Choose a file")
@@ -63,8 +67,8 @@ class MainWindow(QMainWindow):
         file_dialog.setFileMode(QFileDialog.FileMode.ExistingFile)  # max one file
         file_dialog.setNameFilter("File (*.xml)")
         if file_dialog.exec() == QFileDialog.DialogCode.Rejected:
-            self.show_error("Error when choosing file")
-            return
+            self.show_error("Error when choosing XML file")
+            raise Exception
         return file_dialog.selectedFiles()[0]
 
     def get_file_with_key(self):
@@ -74,7 +78,7 @@ class MainWindow(QMainWindow):
         key_file_dialog.setNameFilter("RSA files (*.pem)")
         if key_file_dialog.exec() == QFileDialog.DialogCode.Rejected:
             self.show_error("Error when choosing key")
-            return
+            raise Exception
         return key_file_dialog.selectedFiles()[0]
 
     def choose_directory(self):
@@ -85,14 +89,18 @@ class MainWindow(QMainWindow):
             return directory_dialog.selectedFiles()[0]
         else:
             self.show_error("Error when choosing directory")
+            raise Exception
 
     def sign_file(self):
-        file = self.get_file()
-        key_file = self.get_file_with_key()
-        pin = self.insert_pin()
-        private_key = load_private_key_from_file(key_file, pin)
+        try:
+            file = self.get_file()
+            key_file = self.get_file_with_key()
+            pin = self.insert_pin()
+            private_key = load_private_key_from_file(key_file, pin)
+        except Exception:
+            return
         signer.create_xml(file, private_key)
-        self.status_label.display_success("File signed")
+        self.display_success("File signed")
 
     def verify(self):
         try:
@@ -103,24 +111,30 @@ class MainWindow(QMainWindow):
         except Exception:
             return
         if verify_xml(xml_file, public_key, file):
-            self.status_label.display_success("Signatures are identical")
+            self.display_success("Signatures are identical")
         else:
-            self.status_label.display_success("Signatures are different")
+            self.display_success("Signatures are different")
 
     def encryption(self):
-        key_file = self.get_file_with_key()
-        public_key = load_public_key_from_file(key_file)
-        file = self.get_file()
+        try:
+            key_file = self.get_file_with_key()
+            public_key = load_public_key_from_file(key_file)
+            file = self.get_file()
+        except Exception:
+            return
         with open(file, "rb") as f:
             data = f.read()
             buffer = data
 
         with open(file, "wb") as f:
             f.write(encrypt_data(buffer, public_key))
-        self.status_label.display_success("Encryption successful")
+        self.display_success("Encryption successful")
 
     def decryption(self):
-        key_file = self.get_file_with_key()
+        try:
+            key_file = self.get_file_with_key()
+        except Exception:
+            return
 
         try:
             pin = self.insert_pin()
@@ -132,18 +146,19 @@ class MainWindow(QMainWindow):
 
             with open(file, "wb") as f:
                 f.write(decrypt_data(buffer, private_key))
-            self.status_label.display_success("Decryption successful")
+            self.display_success("Decryption successful")
         except Exception as e:
             self.show_error("Invalid PIN")
 
     def key_generation(self):
         try:
             directory = self.choose_directory()
-            pin = self.insert_pin()
-            save_keys(path=directory, file_name="key", private_key=generate_rsa(), pin=pin)
-            self.status_label.display_success("Key generated in " + directory)
-        except Exception as e:
-            self.show_error("Invalid PIN")
+        except Exception:
+            return
+        pin = self.insert_pin()
+        save_keys(path=directory, file_name="key", private_key=generate_rsa(), pin=pin)
+        self.display_success("Key generated in " + directory)
+
 
     def show_error(self, text):
         msg = QMessageBox()
@@ -154,10 +169,6 @@ class MainWindow(QMainWindow):
         self.status_label.setText("Error occured!")
         self.status_label.setStyleSheet("background-color: lightcoral")
         msg.exec()
-
-    def display_success(self, text):
-        self.status_label.setText("text")
-        self.status_label.setStyleSheet("background-color: lightgreen")
 
     def insert_pin(self):
         pin, ok = QInputDialog.getText(self, 'Hold!', 'Insert PIN')
