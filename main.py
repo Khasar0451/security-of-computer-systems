@@ -28,7 +28,7 @@ class MainWindow(QMainWindow):
         decryption_button.clicked.connect(self.decryption)
         key_button.clicked.connect(self.key_generation)
 
-        status_label = QLabel("Kowalki analiza")
+        self.status_label = QLabel("Witaj")
 
         hbox = QHBoxLayout()
         vbox = QVBoxLayout()
@@ -39,7 +39,7 @@ class MainWindow(QMainWindow):
         hbox.addWidget(key_button)
 
         vbox.addLayout(hbox)
-        vbox.addWidget(status_label)
+        vbox.addWidget(self.status_label)
 
         centralWidget = QWidget()
         centralWidget.setLayout(vbox)
@@ -48,11 +48,21 @@ class MainWindow(QMainWindow):
     def get_file(self):
         file_dialog = QFileDialog()
         file_dialog.setFileMode(QFileDialog.FileMode.ExistingFile)  # max one file
-        file_dialog.setNameFilter("Files (*.pdf *.cpp *.xml)")
+        file_dialog.setNameFilter("Files (*.pdf *.cpp)")
         if file_dialog.exec() == QFileDialog.DialogCode.Rejected:
             self.show_error("Error when choosing file")
             return
         return file_dialog.selectedFiles()[0]
+
+    def get_xml_file(self):
+        file_dialog = QFileDialog()
+        file_dialog.setFileMode(QFileDialog.FileMode.ExistingFile)  # max one file
+        file_dialog.setNameFilter("File (*.xml)")
+        if file_dialog.exec() == QFileDialog.DialogCode.Rejected:
+            self.show_error("Error when choosing file")
+            return
+        return file_dialog.selectedFiles()[0]
+
 
     def get_file_with_key(self):
         key_file_dialog = QFileDialog()
@@ -77,17 +87,18 @@ class MainWindow(QMainWindow):
         pin = self.insert_pin()
         private_key = load_private_key_from_file(key_file, pin)
         signer.create_xml(file, private_key)
+        self.status_label.setText("File signed")
 
     def verify(self):
         file = self.get_file()
-        xml_file = self.get_file()
+        xml_file = self.get_xml_file()
         key_file = self.get_file_with_key()
         public_key = load_public_key_from_file(key_file)
         if verify_xml(xml_file, public_key, file):
-            print("jej")
+            self.status_label.setText("Signatures are identical")
         else:
-            print("nie jej")
-            # TO DO status zmienic
+            self.status_label.setText("Signatures are different")
+
 
     def encryption(self):
         key_file = self.get_file_with_key()
@@ -99,6 +110,7 @@ class MainWindow(QMainWindow):
 
         with open(file, "wb") as f:
             f.write(encrypt_data(buffer, public_key))
+        self.status_label.setText("Encryption successful")
 
     def decryption(self):
         key_file = self.get_file_with_key()
@@ -113,6 +125,7 @@ class MainWindow(QMainWindow):
 
             with open(file, "wb") as f:
                 f.write(decrypt_data(buffer, private_key))
+            self.status_label.setText("Decryption successful")
         except Exception as e:
             self.show_error("Invalid PIN")
 
@@ -121,6 +134,7 @@ class MainWindow(QMainWindow):
             directory = self.choose_directory()
             pin = self.insert_pin()
             save_keys(path=directory, file_name="key", private_key=generate_rsa(), pin=pin)
+            self.status_label.setText("Key generated in " + directory)
         except Exception as e:
             self.show_error("Invalid PIN")
 
@@ -130,11 +144,11 @@ class MainWindow(QMainWindow):
         msg.setText(text)
         msg.setWindowTitle("Error")
         msg.adjustSize()
+        self.status_label.setText("Error~occured!")
         msg.exec()
 
     def insert_pin(self):
         pin, ok = QInputDialog.getText(self, '"Encryption/decryption', 'Insert PIN?')
-        # TODO validate PIN
         if ok:
             return pin
         else:
