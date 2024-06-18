@@ -146,12 +146,11 @@ class MainWindow(QMainWindow):
         msg.setText(text)
         msg.setWindowTitle("Error")
         msg.adjustSize()
-        self.status_label.setText("Error~occured!")
-        self.status_label.set
+        self.status_label.setText("Error occured!")
         msg.exec()
 
     def insert_pin(self):
-        pin, ok = QInputDialog.getText(self, '"Encryption/decryption', 'Insert PIN?')
+        pin, ok = QInputDialog.getText(self, 'Hold!', 'Insert PIN')
         if ok:
             return pin
         else:
