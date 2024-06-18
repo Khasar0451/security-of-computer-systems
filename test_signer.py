@@ -48,7 +48,7 @@ def test_sign_verify():
     " consequat nibh. Sed in enim enim. "
 
     signature = sign_data(lorem_string.encode(), key)
-    assert verify_signature(lorem_string, key.public_key(), signature)
+    assert verify_signature(lorem_string.encode(), key.public_key(), signature)
 
 
 def test_encrypt_decrypt():
@@ -58,9 +58,28 @@ def test_encrypt_decrypt():
     " nibh sagittis sodales. Nulla varius sollicitudin ornare. Aenean sed efficitur ex. Proin fermentum"
     " lorem sem, vitae mollis lorem auctor at. Nullam mollis diam vulputate, volutpat leo vitae,"
     " consequat nibh. Sed in enim enim. "
-    encrypted = encrypt_string(lorem_string.encode(), key.public_key())
+    encrypted = encrypt_data(lorem_string.encode(), key.public_key())
 
-    decrypted = decrypt_string(encrypted, key)
+    decrypted = decrypt_data(encrypted, key)
 
     assert decrypted == lorem_string.encode()
+
+
+
+def test_xml_verify():
+    file = "/tmp/file.cpp"
+    xml = "/tmp/signature.xml"
+    with open(file, "w") as f:
+        f.write("abc")
+
+    key = generate_rsa()
+
+    hash = create_xml(file, key)
+    with open(file,"rb") as f:
+        assert verify_signature(f.read(), key.public_key(), hash)
+
+    assert verify_xml(xml, key.public_key(), file)
+
+    os.remove(file)
+    os.remove(xml)
 

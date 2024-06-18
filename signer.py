@@ -1,3 +1,4 @@
+import base64
 import datetime
 import hashlib
 import cryptography.hazmat
@@ -7,7 +8,6 @@ from cryptography.hazmat.primitives.asymmetric import padding
 import xml.etree.ElementTree as ET
 import os
 import time
-
 
 
 def load_private_key_from_file(url, pin):
@@ -23,26 +23,27 @@ def load_public_key_from_file(url):
     with open(url, "rb") as key_file:
         return serialization.load_pem_public_key(key_file.read())
 
+
 def encrypt_data(data, public_key):
     return public_key.encrypt(data,
-        padding.OAEP(
-            mgf=padding.MGF1(algorithm=hashes.SHA256()),
-            algorithm=hashes.SHA256(),
-            label=None
-        ))
+                              padding.OAEP(
+                                  mgf=padding.MGF1(algorithm=hashes.SHA256()),
+                                  algorithm=hashes.SHA256(),
+                                  label=None
+                              ))
 
-def decrypt_data(data : bytes, private_key):
+
+def decrypt_data(data: bytes, private_key):
     return private_key.decrypt(data, padding.OAEP(
-            mgf=padding.MGF1(algorithm=hashes.SHA256()),
-            algorithm=hashes.SHA256(),
-            label=None
-        ))
+        mgf=padding.MGF1(algorithm=hashes.SHA256()),
+        algorithm=hashes.SHA256(),
+        label=None
+    ))
 
 
-def verify_signature(data, public_key, signature):  # data - signed file, signature - hash from xml
+def verify_signature(data: bytes, public_key, signature: bytes):  # data - signed file, signature - hash from xml
     try:
-
-        public_key.verify(signature[2:].encode(), data, padding.PSS(
+        public_key.verify(signature, data, padding.PSS(
             mgf=padding.MGF1(hashes.SHA256()), salt_length=padding.PSS.MAX_LENGTH), hashes.SHA256())
     except InvalidSignature:
         return False
@@ -65,7 +66,9 @@ def create_xml(path_with_file_name, private_key):
 
     encrypted_hash = ET.SubElement(root, "encrypted_hash")
     with open(path_with_file_name, "rb") as file:
-        encrypted_hash.text = str(sign_data(file.read(), private_key))
+        hash_bytes = sign_data(file.read(), private_key)
+        string_hash_bytes = base64.b64encode(hash_bytes).decode("utf-8")
+        encrypted_hash.text = string_hash_bytes
 
     signature_timestamp = ET.SubElement(root, "signature_timestamp")
     signature_timestamp.text = datetime.datetime.now().strftime("%m/%d/%Y, %H:%M:%S")
@@ -73,13 +76,15 @@ def create_xml(path_with_file_name, private_key):
     tree = ET.ElementTree(root)
     tree.write(path_without + '/signature.xml')
     pass
+    return hash_bytes
 
-def verify_xml(path_xml, path_key, path_file):
+
+def verify_xml(path_xml, public_key, path_file):
     tree = ET.parse(path_xml)
     root = tree.getroot()
-    hash = str(root.find('encrypted_hash').text)
+    read_hash = root.find('encrypted_hash').text
+    hash = base64.b64decode(read_hash.encode('utf-8'))
     with open(path_file, "rb") as file:
-        public_key = load_public_key_from_file(path_key)
         return verify_signature(file.read(), public_key, hash)
 
 
@@ -105,4 +110,3 @@ def save_keys(path, file_name, private_key, pin):
                                           format=serialization.PrivateFormat.TraditionalOpenSSL,
                                           encryption_algorithm=serialization.
                                           BestAvailableEncryption(password=pin.encode())))
-

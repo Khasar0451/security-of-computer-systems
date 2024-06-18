@@ -16,7 +16,6 @@ from PyQt6.QtWidgets import (
 class MainWindow(QMainWindow):
     def __init__(self):
         super().__init__()
-
         self.setWindowTitle("Safety first")
         sign_file_button = QPushButton("Sign file")
         verify_button = QPushButton("Verify signature")
@@ -83,8 +82,8 @@ class MainWindow(QMainWindow):
         file = self.get_file()
         xml_file = self.get_file()
         key_file = self.get_file_with_key()
-        # public_key = load_public_key_from_file(key_file)
-        if verify_xml(xml_file, key_file, file):
+        public_key = load_public_key_from_file(key_file)
+        if verify_xml(xml_file, public_key, file):
             print("jej")
         else:
             print("nie jej")
