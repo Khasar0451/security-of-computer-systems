@@ -30,6 +30,7 @@ class MainWindow(QMainWindow):
 
         self.status_label = QLabel("Witaj")
         self.status_label.setAlignment(QtCore.Qt.AlignmentFlag.AlignCenter)
+        self.status_label.setStyleSheet("background-color: qlineargradient(x1: 0, x2: 1, stop: 0 lightcoral, stop: 1 lightgreen)")
 
         hbox = QHBoxLayout()
         vbox = QVBoxLayout()
@@ -53,7 +54,7 @@ class MainWindow(QMainWindow):
         file_dialog.setNameFilter("Files (*.pdf *.cpp)")
         if file_dialog.exec() == QFileDialog.DialogCode.Rejected:
             self.show_error("Error when choosing file")
-            return
+            raise Exception
         return file_dialog.selectedFiles()[0]
 
     def get_xml_file(self):
@@ -91,17 +92,20 @@ class MainWindow(QMainWindow):
         pin = self.insert_pin()
         private_key = load_private_key_from_file(key_file, pin)
         signer.create_xml(file, private_key)
-        self.status_label.setText("File signed")
+        self.status_label.display_success("File signed")
 
     def verify(self):
-        file = self.get_file()
-        xml_file = self.get_xml_file()
-        key_file = self.get_file_with_key()
-        public_key = load_public_key_from_file(key_file)
+        try:
+            file = self.get_file()
+            xml_file = self.get_xml_file()
+            key_file = self.get_file_with_key()
+            public_key = load_public_key_from_file(key_file)
+        except Exception:
+            return
         if verify_xml(xml_file, public_key, file):
-            self.status_label.setText("Signatures are identical")
+            self.status_label.display_success("Signatures are identical")
         else:
-            self.status_label.setText("Signatures are different")
+            self.status_label.display_success("Signatures are different")
 
     def encryption(self):
         key_file = self.get_file_with_key()
@@ -113,7 +117,7 @@ class MainWindow(QMainWindow):
 
         with open(file, "wb") as f:
             f.write(encrypt_data(buffer, public_key))
-        self.status_label.setText("Encryption successful")
+        self.status_label.display_success("Encryption successful")
 
     def decryption(self):
         key_file = self.get_file_with_key()
@@ -128,7 +132,7 @@ class MainWindow(QMainWindow):
 
             with open(file, "wb") as f:
                 f.write(decrypt_data(buffer, private_key))
-            self.status_label.setText("Decryption successful")
+            self.status_label.display_success("Decryption successful")
         except Exception as e:
             self.show_error("Invalid PIN")
 
@@ -137,7 +141,7 @@ class MainWindow(QMainWindow):
             directory = self.choose_directory()
             pin = self.insert_pin()
             save_keys(path=directory, file_name="key", private_key=generate_rsa(), pin=pin)
-            self.status_label.setText("Key generated in " + directory)
+            self.status_label.display_success("Key generated in " + directory)
         except Exception as e:
             self.show_error("Invalid PIN")
 
@@ -148,7 +152,12 @@ class MainWindow(QMainWindow):
         msg.setWindowTitle("Error")
         msg.adjustSize()
         self.status_label.setText("Error occured!")
+        self.status_label.setStyleSheet("background-color: lightcoral")
         msg.exec()
+
+    def display_success(self, text):
+        self.status_label.setText("text")
+        self.status_label.setStyleSheet("background-color: lightgreen")
 
     def insert_pin(self):
         pin, ok = QInputDialog.getText(self, 'Hold!', 'Insert PIN')
@@ -162,3 +171,4 @@ app = QApplication(sys.argv)
 window = MainWindow()
 window.show()
 app.exec()
+
